@@ -1,0 +1,52 @@
+library(monocle3)
+library(hooke)
+library(purrr)
+library(tidyverse)
+library(Matrix)
+library(splines)
+
+
+data_dir = "/scratch/nsnyderm/u01/intermediate_files/cell-class_monocle/"
+files = list.files(data_dir)
+
+for(file in files){
+  ct = gsub('.rds','',file)
+  cds = readRDS(paste0(data_dir,file))
+  #cds = cds[,pData(cds)$age>3] #excluding the 2 new-borns
+  
+  prediction_all = NULL
+  regions = colData(cds)$region%>%unique()
+  
+  for(region in regions){
+    print(region)
+    cds_subset = cds[,colData(cds)$region==region]
+    colData(cds_subset)$louvain = as.character(colData(cds_subset)$louvain)
+    colData(cds_subset)$animal_id = as.character(colData(cds_subset)$animal_id)
+      
+    ccs = new_cell_count_set(cds_subset, 
+                             sample_group = "animal_id", 
+                             cell_group = "louvain") 
+    colData(ccs)$age = as.numeric(colData(ccs)$age)
+    
+    ccm = new_cell_count_model(ccs, 
+                               main_model_formula_str = "ns(age, df=3)",
+                               penalize_by_distance=F,
+                               vhat_method = 'bootstrap',
+                               num_bootstraps = 100)
+    
+    
+    ##########non-linear predictions
+    timepoint_pred_df = estimate_abundances_over_interval(ccm,
+                                                          interval_start=0,
+                                                          interval_stop=21,
+                                                          interval_col="age",
+                                                          interval_step=1,
+                                                          min_log_abund = -3
+                                                          )
+    timepoint_pred_df$region=region
+    prediction_all=rbind(prediction_all, timepoint_pred_df)
+  
+  }
+  
+  write.csv(prediction_all,paste0('/home/wyang114/output/hooke_result/',ct,'/',ct,'_all_prediction_bootstrap_update.csv'))
+}
