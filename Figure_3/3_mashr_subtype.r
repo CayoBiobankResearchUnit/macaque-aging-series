@@ -1,3 +1,30 @@
+#' @file 4_mashr_subtype.r
+#' @title Empirical Bayes Correction for Coefficients and Standard Errors from hooke
+#' @author Wei Yang
+#'
+#' @description
+#' Applies Multivariate Adaptive Shrinkage (\code{mashr}) to perform Empirical Bayes 
+#' correction on effect sizes (logFC) and standard errors obtained from \code{hooke} 
+#' cell-subtype abundance testing.
+#'
+#' @section Inputs:
+#' \itemize{
+#'   \item \code{df}: Data frame of \code{hooke} differential abundance results 
+#'         containing logFC, SE, and p-values across subclusters.
+#' }
+#'
+#' @section Outputs:
+#' \itemize{
+#'   \item \code{cell-subtype_full_linear_ctrl-sex_mash_age.csv}: Data frame containing 
+#'         local false sign rates (lfsr), posterior means (pm), and posterior standard 
+#'         deviations (psd) post-Empirical Bayes correction.
+#' }
+#'
+#' @usage
+#' Rscript 4_mashr_subtype.r
+NULL
+
+
 source('/home/wyang114/utils/plotting_theme.R')
 library(dplyr)
 library(tidyverse)

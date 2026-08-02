@@ -1,3 +1,30 @@
+#' @file 1_hooke_linear_subtype_ctrl-sex.r
+#' @title Abundance Test for Cell Subcluster
+#' @author Wei Yang
+#'
+#' @description
+#' Tests for age- and sex-associated changes in cell type abundance using 
+#' \code{hooke} (Poisson log-normal model).
+#'
+#' @section Inputs:
+#' \itemize{
+#'   \item \code{region_dir}: Path to Monocle objects organized by brain region.
+#'   \item \code{data_dir}: Path to Monocle objects organized by cell class.
+#' }
+#'
+#' @section Outputs:
+#' \itemize{
+#'   \item \code{cell-subtype_full_linear_ctrl-sex_age.csv}: Log-fold changes (logFC), 
+#'         standard errors (SE), and p-values for tested cell subtypes.
+#'   \item \code{cell-subtype_full_linear_ctrl-sex_age_count.csv}: Normalized cell count 
+#'         matrix across ages.
+#' }
+#'
+#' @usage
+#' Rscript 1_hooke_linear_subtype_ctrl-sex.r
+NULL
+
+
 library(monocle3)
 library(hooke)
 library(purrr)
@@ -5,21 +32,22 @@ library(tidyverse)
 library(Matrix)
 library(splines)
 
-#Get sample size
-# data_dir = "/scratch/nsnyderm/u01/intermediate_files/regions_monocle/"
-# files = list.files(data_dir)
-# df_size = NULL
-# for(file in files){
-#   region = gsub('.rds','',file)
-#   cds = readRDS(paste0(data_dir,file))
-#   cds_subset = cds[,colData(cds)$age>3]
-#   sample_size = length(unique(colData(cds_subset)$animal_id))
-#   df_size = rbind(df_size,data.frame(region=region,sample_size=sample_size))
-# }
-# write.csv(df_size,paste0('/home/wyang114/output/hooke_result/df_sample_size_age>3.csv'))
-sample_size_df = read_csv('/home/wyang114/output/hooke_result/df_sample_size_age>3.csv')
+##Get sample size
+region_dir = "/scratch/nsnyderm/u01/intermediate_files/regions_monocle/"
+files = list.files(region_dir)
+df_size = NULL
+for(file in files){
+  region = gsub('.rds','',file)
+  cds = readRDS(paste0(region_dir,file))
+  cds_subset = cds[,colData(cds)$age>3]
+  sample_size = length(unique(colData(cds_subset)$animal_id))
+  df_size = rbind(df_size,data.frame(region=region,sample_size=sample_size))
+}
+write.csv(df_size,paste0('/home/wyang114/output/hooke_result/df_sample_size_age>3.csv'))
+
 
 #Testing for differential abundance with in a cell class
+sample_size_df = read_csv('/home/wyang114/output/hooke_result/df_sample_size_age>3.csv')
 data_dir = "/scratch/nsnyderm/u01/intermediate_files/cell-class_monocle/"
 files = list.files(data_dir)
 df_all = NULL
@@ -28,7 +56,7 @@ counts_all=NULL
 for(file in files){
   ct = gsub('.rds','',file)
   cds = readRDS(paste0(data_dir,file))
-  #cds = cds[,colData(cds)$age>3]
+  cds = cds[,colData(cds)$age>3]         #NOTE: comment this if running test for animals of full lifespan.
   
   regions = colData(cds)$region%>%unique()
   
@@ -88,8 +116,9 @@ for(file in files){
   }
 }
 
-
-#write.csv(df_all,'/home/wyang114/output/hooke_result/cell-subtype_full_linear_ctrl-sex_age>3.csv')
-#write.csv(counts_all,'/home/wyang114/output/hooke_result/cell-subtype_full_linear_ctrl-sex_age>3_count.csv')
-write.csv(df_all,'/home/wyang114/output/hooke_result_final/cell-subtype_full_linear_ctrl-sex.csv')
-write.csv(counts_all,'/home/wyang114/output/hooke_result_final/cell-subtype_full_linear_ctrl-sex_counts.csv')
+# ##results output for test of full lifep
+# write.csv(df_all,'/home/wyang114/output/hooke_result_final/cell-subtype_full_linear_ctrl-sex.csv')
+# write.csv(counts_all,'/home/wyang114/output/hooke_result_final/cell-subtype_full_linear_ctrl-sex_counts.csv')
+##results output for test of age>3 years
+write.csv(df_all,'/home/wyang114/output/hooke_result/cell-subtype_full_linear_ctrl-sex_age>3.csv')
+write.csv(counts_all,'/home/wyang114/output/hooke_result/cell-subtype_full_linear_ctrl-sex_age>3_count.csv')                            

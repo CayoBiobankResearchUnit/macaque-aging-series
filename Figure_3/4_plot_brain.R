@@ -1,4 +1,25 @@
+#' @file 3_plot_brain.R
+#' @title Plot Abundance Coefficients Across Brain Regions
+#' @author Wei Yang
+#'
+#' @description
+#' Generates brain maps colored by cell abundance posterior means (pm) from \code{mashr}.
+#'
+#' @section Inputs:
+#' \itemize{
+#'   \item \code{df}: Data frame containing \code{mashr} outputs (\code{lfsr}, \code{pm}, \code{psd}).
+#' }
+#'
+#' @section Outputs:
+#' \itemize{
+#'   \item Brain map visualizations colored by cell abundance.
+#' }
+#'
+#' @usage
+#' source("3_plot_brain.R")  # Or run line-by-line in RStudio
+NULL
 
+## Packages to install
 # https://github.com/coolbutuseless/svgparse
 
 devtools::install_github("kchiou/macaquesimplebrain")

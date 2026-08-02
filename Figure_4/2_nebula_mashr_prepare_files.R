@@ -1,13 +1,43 @@
+#' @file 2_nebula_mashr_prepare_files.R
+#' @title Prepare matrices for Empirical Bayes Correction 
+#' @author Wei Yang
+#'
+#' @description
+#' Applies Multivariate Adaptive Shrinkage (\code{mashr}) to perform Empirical Bayes 
+#' correction on effect sizes (logFC) and standard errors obtained from \code{nebula}.
+#'
+#' @section Inputs:
+#' \itemize{
+#'   \item \code{<cell class>_<subcluster>.txt}: data frame of nebula output with logFC, se and p-value, 
+#'   adjusted p-value after FDR correction for each subcluster from 1_nebula_by_subtype-region.R.
+#' }
+#'
+#' @section Outputs:
+#' \itemize{
+#'   \item \code{<cell class>_mash_input.RData}: matrices of logFC and se prepared for mashR input.
+#' }
+#'
+#' @usage
+#' Rscript 2_nebula_mashr_prepare_files.R
+NULL
+
 library(tidyverse)
 library(dplyr)
 library(stringr)
 
-data_dir = '/scratch/nsnyderm/u01/intermediate_files/nebula'
+####organize nebula outputs from all subclusters into a dataframe
+data_dir = '/scratch/wyang114/outputs/nebula/by_region_NBLMM/'
+file_list <- list.files(path = data_dir, pattern = "\\.txt$", recursive = TRUE, full.names = TRUE)
+df_list <- vector("list", length(file_list))
+for (i in seq_along(file_list)) {
+  df_list[[i]] <- read.table(file_list[i], header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+}
+combined_df <- do.call(rbind, df_list)
+write.csv(combined_df, file = file.path(data_dir, "by_region_all_NBGMM_cpc.csv"), row.names = FALSE)
 
-df = read.csv(file.path(data_dir,'by_region_all_NBGMM_cpc.csv'))
-df$cell_type = str_split_fixed(df$id,'_',3)[,1] #id: celltype_louvainX_region
 
 ####Use 30 donors and 300 cells as cutoff. (filter all basket cells in MB)
+df = read.csv(file.path(data_dir,'by_region_all_NBGMM_cpc.csv'))
 cell_count = read.csv(file.path(data_dir,'combined_cell_type_region_counts.csv'))
 cell_count$identity = paste0(cell_count$cell_type,'_louvain',cell_count$louvain,'_',cell_count$region)
 all_identity = cell_count$identity%>%unique()

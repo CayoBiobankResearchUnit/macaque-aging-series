@@ -1,3 +1,7 @@
+##Plot pseudotime for microglia
+##Wei Yang
+##Input: Monocle object with pseudotime calculation from pseudotime_microglia.R
+
 library(reticulate)
 use_condaenv(condaenv = '~/.conda/envs/TACCO_env/', required = TRUE)
 library("anndata")

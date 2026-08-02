@@ -1,3 +1,15 @@
+#' @file 5_plotting_cell_abundance.R
+#' @author Wei Yang
+#'
+#' @description
+#' Generates panels for Figure 3
+#'
+#' @usage
+#' # Open in RStudio and execute lines sequentially (Cmd+Enter / Ctrl+Enter)
+#' # Or render interactively:
+#' source("5_plotting_cell_abundance.R", echo = TRUE)
+NULL
+
 source('/home/wyang114/utils/plotting_theme.R')
 library(ggplot2)
 library(dplyr)

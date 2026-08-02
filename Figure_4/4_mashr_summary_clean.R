@@ -1,3 +1,35 @@
+#' @file 4_mashr_summary_clean.R
+#' @title Combine mashR Output with NEBULA and Perform Downstream Analysis
+#' @author Wei Yang
+#'
+#' @description
+#' Combines \code{mashr} outputs (LFSR, posterior means, and posterior standard 
+#' deviations) with \code{nebula} differential expression results. Performs 
+#' downstream analyses including DEG counting, effect size evaluations across 
+#' subcluster-region combinations, LOESS fitting to adjust DEG counts, and 
+#' cross-subcluster x region DEG correlation analysis.
+#'
+#' @section Inputs:
+#' \itemize{
+#'   \item \code{by_region_all_NBGMM_cpc.csv}: Data frame of NEBULA outputs organized 
+#'         by gene and ID per row.
+#'   \item \code{<cell_class>_mash_age_results.RData}: RData files containing \code{mashr} 
+#'         matrices for LFSR, posterior means (pm), and posterior standard deviations (psd).
+#' }
+#'
+#' @section Outputs:
+#' \itemize{
+#'   \item \code{all_mashr_summary_update.csv}: Combined dataset containing both NEBULA 
+#'         and \code{mashr} statistics.
+#'   \item \code{all_mashr_summary_lfsr<0.05_filter_missing_update.csv}: Combined dataset containing 
+#'   both NEBULA and \code{mashr} statistics, filtering missing genes and keep siginficant gene-id
+#'   with lfsr<0.05. 
+#' }
+#'
+#' @usage
+#' Rscript 4_mashr_summary_clean.R
+NULL
+
 source('/home/wyang114/utils/plotting_theme.R')
 source('/home/wyang114/utils/annotation.R')
 library(dplyr)
@@ -18,7 +50,7 @@ library(RColorBrewer)
 regions = c('ACC','dlPFC','IPP','M1','EC','HIP','CN','NAc','mdTN','MB','lCb')
 
 ###nebula outputs (filter it the same way as mashr inputs)
-df_nebula = read.csv('/scratch/klwatki5/R_analysis/bbi/nebula/infants_removed/combined_results.csv') #all nebula outputs: 7686734, 1323 subtype x region (including 13 MB-basket and 16 HIP-msn)
+df_nebula = read.csv('/scratch/wyang114/outputs/nebula/by_region_NBLMM/by_region_all_NBGMM_cpc.csv') #all nebula outputs: 7686734, 1323 subtype x region (including 13 MB-basket and 16 HIP-msn)
 
 ####Use 30 donors and 300 cells as cutoff. (filter all basket cells in MB)
 cell_count = read.csv('/scratch/klwatki5/R_analysis/bbi/nebula/infants_removed/cell_counts_updated.csv') #1486 (including 13 MB-basket and 16 HIP-msn)
@@ -40,11 +72,10 @@ df_nebula_filter = df_nebula%>%
 write.csv(df_nebula_filter,'/scratch/nsnyderm/u01/intermediate_files/nebula/age/nebula_NBGMM_filtered_rminfants_update.csv') 
 
 ###mashr summary
-data.dir = '/scratch/klwatki5/R_analysis/bbi/mashr/results/1_raw_matrices'
-output.dir = '/scratch/nsnyderm/u01/intermediate_files/nebula/age_olig_split/'
+data.dir = '/scratch/wyang114/outputs/nebula/mash_outputs/'
+output.dir = '/scratch/wyang114/outputs/nebula/'
 files = list.files(data.dir)
-files = files[grep('age_DEG_results',files)]
-files = files[files != 'oligodendrocytes_mash_age_DEG_results.RData']
+files = files[grep('mash_age_results',files)]
 df = NULL
 for(file in files){
   load(file.path(data.dir,file))
@@ -55,9 +86,9 @@ for(file in files){
   df_pm = pm%>%data.frame()%>%rownames_to_column('gene')%>%pivot_longer(cols = 2:(n_col+1), names_to = 'id', values_to = 'age_mashr_pm')
   df_psd = psd%>%data.frame()%>%rownames_to_column('gene')%>%pivot_longer(cols = 2:(n_col+1), names_to = 'id', values_to = 'age_mashr_psd')
   df_combined = Reduce(function(x, y) merge(x, y, by = c("gene","id")), list(df_lfsr, df_pm, df_psd))
-  #write.csv(df_combined, file.path(output.dir,sprintf('%s_mashr_all_summary.csv',ct)))
-  #df_combined = df_combined%>%filter(age_mashr_lfsr<0.05)
-  #write.csv(df_combined, file.path(output.dir,sprintf('%s_mashr_filtered_summary.csv',ct)))
+  write.csv(df_combined, file.path(output.dir,sprintf('%s_mashr_all_summary.csv',ct)))
+  df_combined = df_combined%>%filter(age_mashr_lfsr<0.05)
+  write.csv(df_combined, file.path(output.dir,sprintf('%s_mashr_filtered_summary.csv',ct)))
   df = rbind(df,df_combined)
 }
 df$region = str_split_fixed(df$id,'_',3)[,3]

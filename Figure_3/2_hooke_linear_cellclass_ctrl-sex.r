@@ -1,3 +1,28 @@
+#' @file 2_hooke_linear_cellclass_ctrl-sex.r
+#' @title Abundance Test for Cell Class
+#' @author Wei Yang
+#'
+#' @description
+#' Tests for age- and sex-associated changes in cell type abundance using 
+#' \code{hooke} (Poisson log-normal model).
+#'
+#' @section Inputs:
+#' \itemize{
+#'   \item \code{data_dir}: Path to Monocle objects organized by brain region.
+#' }
+#'
+#' @section Outputs:
+#' \itemize{
+#'   \item \code{cell-class_full_linear_ctrl-sex.csv}: Log-fold changes (logFC), 
+#'         standard errors (SE), and p-values for tested cell subtypes.
+#'   \item \code{cell-class_full_linear_ctrl-sex_count.csv}: Normalized cell count 
+#'         matrix across ages.
+#' }
+#'
+#' @usage
+#' Rscript 2_hooke_linear_cellclass_ctrl-sex.r
+NULL
+
 library(monocle3)
 library(hooke)
 library(purrr)
@@ -17,8 +42,9 @@ for(file in files){
     cds = readRDS(paste0(data_dir,file))
     print(dim(cds))
     
-    #cds_subset=cds[,colData(cds)$age>3] #subset to non-infants
     cds_subset = cds
+    #cds_subset=cds[,colData(cds)$age>3] #subset to non-infants  #NOTE: uncomment this if testing for animals age>3
+    
     
     colData(cds_subset)$cell_class_annotation = as.character(colData(cds_subset)$cell_class_annotation)
     colData(cds_subset)$animal_id = as.character(colData(cds_subset)$animal_id)

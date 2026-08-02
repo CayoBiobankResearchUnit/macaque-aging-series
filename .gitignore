@@ -1,0 +1,23 @@
+# R artifacts
+.Rhistory
+.RData
+.Rproj.user/
+*.Rcheck/
+
+# Python / Jupyter artifacts
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Large data, figures, & logs
+*.h5ad
+*.rds
+*.csv
+*.gz
+*.pdf
+*.log
+*.Rout
+
+# System & OS files
+.DS_Store
+Thumbs.db

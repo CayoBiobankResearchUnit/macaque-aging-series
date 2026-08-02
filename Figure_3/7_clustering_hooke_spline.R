@@ -1,3 +1,15 @@
+#' @file 7_clustering_hooke_spline.R
+#' @author Wei Yang
+#'
+#' @description
+#' Generates panels for Figure 3I
+#'
+#' @usage
+#' # Open in RStudio and execute lines sequentially (Cmd+Enter / Ctrl+Enter)
+#' # Or render interactively:
+#' source("7_clustering_hooke_spline.R", echo = TRUE)
+NULL
+
 source('/home/wyang114/utils/plotting_theme.R')
 library(tidyverse)
 library(dplyr)

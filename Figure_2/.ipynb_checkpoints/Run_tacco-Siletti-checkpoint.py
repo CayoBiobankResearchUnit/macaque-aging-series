@@ -1,5 +1,28 @@
-#Script to annotate cell class and cell subcluster with tacco
-#author: wei yang
+"""Annotate cell class and cell subcluster using TACCO label transfer.
+
+Transfers cell class and cell subcluster annotations from the Siletti human brain atlas 
+to the query dataset using TACCO. Non-neuron cells are grouped among regions due to low number 
+of non-neuron cells captured in the reference.
+
+Author:
+    Wei Yang
+
+Args:
+    1.region (str): Brain region in the query dataset for annotation.
+    2.ref_region (str): Corresponding brain region in the reference dataset.
+    3.ref_dir (str): Directory containing the reference dataset (.h5ad).
+    4.query_dir (str): Directory containing the query dataset (.h5ad).
+
+Returns:
+    Anndata: An updated `.h5ad` file containing cell class and subcluster annotations.
+    Plots: UMAPs visualizing TACCO annotations and entropy/max scores.
+    CSV: Summary table of cell class/subcluster percentage distributions 
+        comparing the reference vs. query dataset.
+
+Example:
+    $ python Run_tacco.py "MB" "Human CaB" "/path/to/ref" "/path/to/query"
+"""
+
 import os
 import tacco as tc
 import sys
@@ -8,20 +31,24 @@ import numpy as np
 import pandas as pd
 
 #Params
-region = 'MB'
-ref_dir = '/scratch/klchiou/bican/Siletti_subsampled_AIT21_scos.h5ad'
-query_dir = f'/scratch/wyang114/processed_data/filtered_data_Feb/anndata_rna_{region.lower()}_filtered.h5ad'
+region=sys.argv[1]
+ref_region=sys.argv[2]
+ref_dir=sys.argv[3]
+query_dir=sys.argv[4]
+# region = 'MB'
+# ref_region = ['Human CaB']
+# ref_dir = '/scratch/klchiou/bican/Siletti_subsampled_AIT21_scos.h5ad'
+# query_dir = f'/scratch/wyang114/processed_data/filtered_data_Feb/anndata_rna_{region.lower()}_filtered.h5ad'
 
 #script
 print('processing '+region)
 print('loading ref...')
 reference = sc.read_h5ad(ref_dir) 
 select_genes = reference.var.index
-#[np.where(~reference.var['chromosome'].isin(['X','Y']))] REMOVED BECAUSE REF DOES NOT CONTAIN CHROMOSOME DATA
+
 
 #filter cells
 df = reference.obs
-ref_region = ['Human CaB']
 non_neurons = ['Astrocyte','Bergmann glia','Committed oligodendrocyte precursor','Ependymal','Fibroblast','Microglia','Oligodendrocyte',
               'Oligodendrocyte precursor','Vascular',
               'Miscellaneous'

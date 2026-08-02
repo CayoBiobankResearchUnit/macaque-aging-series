@@ -1,3 +1,22 @@
+#' @file 8_hooke_normalized_counts_subtype.R
+#' @author Wei Yang
+#'
+#' @description
+#' Generates panels for Figure 3
+#' 
+#' @section Inputs:
+#' \itemize{
+#'   \item \code{df}: Data frame of normalized counts output from 
+#'         \code{1_hooke_linear_subtype_ctrl-sex.r} and 
+#'         \code{2_hooke_linear_cellclass_ctrl-sex.r}.
+#' }
+#'
+#' @usage
+#' # Open in RStudio and execute lines sequentially (Cmd+Enter / Ctrl+Enter)
+#' # Or render interactively:
+#' source("8_hooke_normalized_counts_subtype.R", echo = TRUE)
+NULL
+
 library(monocle3)
 library(hooke)
 library(purrr)

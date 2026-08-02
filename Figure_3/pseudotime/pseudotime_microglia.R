@@ -1,3 +1,7 @@
+##Run pseudotime for microglia
+##Wei Yang
+##Input: filtered .h5ad for microglia
+
 library(reticulate)
 use_condaenv(condaenv = '~/.conda/envs/TACCO_env/', required = TRUE)
 library("anndata")

@@ -1,3 +1,26 @@
+#' @file AD_overlap_clean.R
+#' @title Overlap age-associated DEGs and AD-associated DEGs
+#' @author Wei Yang
+#'
+#' @description
+#' compared aDEGs from our dataset to AD-differentially expressed genes (AD-DEGs) 
+#' from three independent age-matched, case-control single-cell studies
+#'
+#' @section Inputs:
+#' \itemize{
+#'   \item \code{all_mashr_summary_lfsr<0.05_filter_missing_update.csv}: Combined dataset containing 
+#'   both NEBULA and \code{mashr} statistics.
+#' }
+#'
+#' @section Outputs:
+#' \itemize{
+#'   \item Visualization of enrichment analysis by cell type x region.
+#' }
+#'
+#' @usage
+#' source("AD_overlap_clean.R")  # Or run line-by-line in RStudio
+NULL
+
 source('/home/wyang114/utils/plotting_theme.R')
 source('/home/wyang114/utils/annotation.R')
 library(dplyr)
@@ -6,6 +29,11 @@ library(reshape2)
 library(pheatmap)
 library(viridis)
 library(RColorBrewer)
+organism = "org.Mmu.eg.db"
+library(organism, character.only = TRUE)
+library(RColorBrewer)
+library(msigdbr)
+library(clusterProfiler)
 
 #Need to convert ref set of DEG to macaque names
 ad.sc = read.csv('/home/wyang114/data/AD_genesets/sc_all_deg_summary.csv')[-1]
@@ -25,15 +53,20 @@ colnames(ad.sc)[6] = 'macaque.gene.name'
 ad.sc = ad.sc%>%filter(macaque.gene.name!='')
 
 ####fisher's exact test
+##which celltype x region show significant enrichment of AD set from a specfic celltype in region
+#filter regional neurons/subtypes from dissection error
+#load('/home/wyang114/output/transcriptional/subtypexregion_percent>1.RData')
 
 ###universe of celltype
-df_query = read.csv('/scratch/nsnyderm/u01/intermediate_files/nebula/age_olig_split/all_mashr_summary_filter_missing_update.csv')[-1]
-df_universe = df_query %>% group_by(celltype,region,louvain,id) %>% summarise(unique_values = list(unique(gene)))
-save(df_universe, file = '/scratch/nsnyderm/u01/intermediate_files/nebula/age_olig_split//nebula_universe_subtypexregion.RData')
+#df_query = read.csv('/scratch/nsnyderm/u01/intermediate_files/nebula/age_olig_split/all_mashr_summary_filter_missing_update.csv')[-1]
+#df_universe = df_query %>% group_by(celltype,region,louvain,id) %>% summarise(unique_values = list(unique(gene)))
+#save(df_universe, file = '/scratch/nsnyderm/u01/intermediate_files/nebula/age_olig_split//nebula_universe_subtypexregion.RData')
 
 load('/scratch/nsnyderm/u01/intermediate_files/nebula/age_olig_split//nebula_universe_subtypexregion.RData') #universe of genes in each cell type
 var_info = read_delim('/data/CEM/smacklab/team_scratch/wyang114/data/var_info.txt',delim = '\t')%>%column_to_rownames('ensembl_gene_id')
-df_query = read.csv('/scratch/nsnyderm/u01/intermediate_files/nebula/age_olig_split/all_mashr_summary_lfsr<0.05_filter_missing_update.csv')[-1]
+#df_query = read.csv('/scratch/nsnyderm/u01/intermediate_files/nebula/age_olig_split/all_mashr_summary_lfsr<0.05_filter_missing_update.csv')[-1]
+df_all = read.csv('/data/CEM/smacklab/data/bican/u01_results/mashr_additive_master_merged.csv')[-1]
+df_query = df_all%>%filter(age_lfsr<0.05)
 
 #test on region vs region (celltype x region vs celltype x region)
 ad.sc.all = ad.sc%>%filter((dataset=='Mathys_2024'&region!='allregions')|(dataset %in% c('Grubman_2019','Morabito_2021')))
@@ -154,17 +187,19 @@ ad.sc.all$direction = ifelse(ad.sc.all$LFC<0,'down','up')
 write.csv(ad.sc.all,'/home/wyang114/data/AD_genesets/sc_all_deg_summary_region.csv')
 
 ad.sc.all <- read.csv('/home/wyang114/data/AD_genesets/sc_all_deg_summary_region.csv')
+
+
 ad_count = ad.sc.all%>%dplyr::select(macaque.gene.name,ct_label)%>%group_by(macaque.gene.name)%>%
   summarise(ad_count = n_distinct(ct_label))%>%mutate(ad_perc=ad_count/7)
 hist(ad_count$ad_count)
 
-age_count = df_query%>%dplyr::select(external_gene_name,celltype)%>%group_by(external_gene_name)%>%
-  summarise(age_count=n_distinct(celltype))%>%mutate(age_perc=age_count/11)
+age_count = df_query%>%dplyr::select(external_gene_name,cell_type)%>%group_by(external_gene_name)%>%
+  summarise(age_count=n_distinct(cell_type))%>%mutate(age_perc=age_count/11)
 hist(age_count$age_count)
 
+#identify broad genes and unique genes
 cc_count = inner_join(ad_count,age_count,by=c('macaque.gene.name'='external_gene_name'))
 unique_gene = cc_count%>%filter(ad_count==1 & age_count==1)%>%pull(macaque.gene.name)
-#broad_gene = cc_count%>%filter(ad_perc>0.5 & age_perc>0.5)%>%pull(macaque.gene.name)
 broad_gene = cc_count%>%filter(ad_count>1|age_count>1)%>%pull(macaque.gene.name)
 perc_unique = length(unique_gene)/length(unique(cc_count$macaque.gene.name)) #0.05375769
 perc_broad = length(broad_gene)/length(unique(cc_count$macaque.gene.name)) #0.1267719
@@ -215,19 +250,20 @@ overlap_summary <- overlap_summary %>%
   mutate(share_pval = binom.test(n_share, n_genes, p = perc_broad, alternative = "greater")$p.value) %>%
   ungroup()
 write.csv(overlap_summary,'/home/wyang114/output/transcriptional/transcriptional_summary/olig-split/overlap_summary_0.001.csv')
+
+
+
+#Identify microglia unique genes
 overlap_summary <- read.csv('/home/wyang114/output/transcriptional/transcriptional_summary/olig-split/overlap_summary_0.001.csv',row.names = 1)
-
-
-#check direction of microglia genes
 mgl_unique = (overlap_summary%>%filter(macaque_ct=='microglia',match=='self')%>%pull(genelist)%>%str_split(., ","))[[1]]
-res_test = res%>%filter(macaque_ct==human_ct,grepl('microglia',con..in.macaque))
+res_test = res_filtered%>%filter(macaque_ct==human_ct,grepl('microglia',con..in.macaque))
 res_test$region = str_split_fixed(res_test$con..in.macaque,'_',2)[,2]
 res_test%>%filter(direction=='up')%>%ggplot(.,aes(x=factor(region,levels=regions),y=a))%>%+geom_boxplot()+
     ylab('perc of genes overlapped')+
     ggtitle('overlap of microglia up aDEG and AD DEG')
 mgl_up_unique = res_test%>%filter(direction=='up')%>%pull(genelist)%>%str_split(., ",")%>%unlist()%>%unique()
-df_all= read.csv('/scratch/nsnyderm/u01/intermediate_files/nebula/age_olig_split/all_mashr_summary_filter_missing_update.csv')[-1]
 
+#df_all= read.csv('/scratch/nsnyderm/u01/intermediate_files/nebula/age_olig_split/all_mashr_summary_filter_missing_update.csv')[-1]
 # subset = df_all%>%filter(external_gene_name %in% mgl_up_unique)%>%filter(celltype=='microglia')
 # mat = subset%>%group_by(region,external_gene_name)%>%summarise(mean_pm = min(age_mashr_pm))%>%
 #   pivot_wider(id_cols=external_gene_name,names_from = region, values_from = mean_pm)%>%
@@ -244,8 +280,9 @@ df_all= read.csv('/scratch/nsnyderm/u01/intermediate_files/nebula/age_olig_split
 ###########plot overlap stats
 #overlap conditions with padj<0.05
 #percentage overlap
-df_query = read.csv('/scratch/nsnyderm/u01/intermediate_files/nebula/age_olig_split//all_mashr_summary_lfsr<0.05_filter_missing_update.csv')[-1]
-n_adeg = df_query%>%group_by(celltype)%>%summarise(n_adeg=n_distinct(gene))
+#df_query = read.csv('/scratch/nsnyderm/u01/intermediate_files/nebula/age_olig_split//all_mashr_summary_lfsr<0.05_filter_missing_update.csv')[-1]
+df_query = read.csv('/data/CEM/smacklab/data/bican/u01_results/mashr_additive_master_merged.csv')[-1]%>%filter(age_lfst<0.05)
+n_adeg = df_query%>%group_by(cell_type)%>%summarise(n_adeg=n_distinct(external_gene_name))
 pdf('/home/wyang114/output/transcriptional/transcriptional_summary/olig-split/overlap_self_others.pdf',width = 7,height = 4.5)
 overlap_summary %>%
   left_join(.,n_adeg,by=c('macaque_ct'='celltype'))%>%
@@ -272,20 +309,22 @@ all_df = data.frame(macaque_ct=rep('all',3), match=rep('',3),
 df_long <- overlap_summary %>%select(macaque_ct,match,per_unique, per_share, per_others)%>%
   pivot_longer(cols = c(per_unique, per_share, per_others), names_to = "category", values_to = "percentage")%>%
   bind_rows(.,all_df)
-pdf('/home/wyang114/output/transcriptional/transcriptional_summary/olig-split/overlap_unique_share.pdf',width = 7,height = 4.5)
+pdf('/home/wyang114/output/transcriptional/transcriptional_summary/olig-split/overlap_unique_only.pdf',width = 7,height = 4.5)
 df_long%>%arrange(macaque_ct)%>%
-  ggplot(., aes(x = interaction(match, macaque_ct), y = percentage, fill = category)) +
+  filter(category=='per_unique')%>%filter(macaque_ct!='all')%>%filter(match=='self')%>%
+  ggplot(., aes(x = macaque_ct, y = percentage*100, fill = category)) +
   geom_bar(stat = "identity", position = 'stack',width = 0.6) +
-  scale_fill_brewer(palette = 'Paired')
+  scale_fill_brewer(palette = 'Paired')+ scale_y_continuous('percentage',breaks=seq(0,12,2))
 dev.off()
 
-#GO
+#GO term of microglia unique and broad genes
 organism = "org.Mmu.eg.db"
 library(organism, character.only = TRUE)
 library(clusterProfiler)
 library(msigdbr)
 #universe = cc_count%>%pull(macaque.gene.name)%>%unique() #all overlap genes?
 #universe = df_all%>%filter(celltype=='microglia')%>%pull(external_gene_name)%>%unique() 
+#df_all = read.csv('/data/CEM/smacklab/data/bican/u01_results/mashr_additive_master_merged.csv')[-1]
 universe = df_all%>%pull(external_gene_name)%>%unique()
 geneset = broad_gene
 #geneset=unique_gene[unique_gene %in% mgl_unique]
@@ -293,9 +332,23 @@ gene.df <- AnnotationDbi::select(org.Mmu.eg.db,keys = geneset,columns = c("ENTRE
 all.gene.df = AnnotationDbi::select(org.Mmu.eg.db,keys = universe,columns = c("ENTREZID", "SYMBOL"),keytype = "SYMBOL")
 ego = enrichGO(gene.df$ENTREZID, OrgDb='org.Mmu.eg.db', ont='ALL',universe = all.gene.df$ENTREZID,pvalueCutoff=0.05)
 eKEGG = enrichKEGG(gene.df$ENTREZID, organism='mcc',universe = gene.df$ENTREZID,pvalueCutoff=0.05)
+pdf('/home/wyang114/output/transcriptional/transcriptional_summary/olig-split/broad_gene_AD_enrich_barplot.pdf',width=7.43,height=4.32)
 barplot(ego, showCategory = 10, title = "pan-cellular gene program",font.size = 10)+
-  scale_fill_gradientn(colors = colorRampPalette(brewer.pal(9, "RdYlGn"))(100))
+  scale_fill_gradientn(colors = colorRampPalette(brewer.pal(9, "Purples")[5:9])(100))
+dev.off()
+write.table(data.frame(ego),'/home/wyang114/output/transcriptional/transcriptional_summary/olig-split/broad_gene_AD_enrich_results.csv',sep=',')
 
+#Get the direction of genes enriched in certain pathway
+mgl_go = read.csv('/home/wyang114/output/transcriptional/transcriptional_summary/olig-split/mgl_gene_AD_enrich_results.csv')%>%
+  mutate(gene_list = strsplit(as.character(geneID), "/"))
+mgl_go_genes = mgl_go%>%arrange(qvalue, desc=F)%>%head(10)%>%pull(gene_list)%>%unlist()%>%unique() #12
+broad_go = read.csv('/home/wyang114/output/transcriptional/transcriptional_summary/olig-split/broad_gene_AD_enrich_results.csv')%>%
+  mutate(gene_list = strsplit(as.character(geneID), "/"))
+broad_go_genes = broad_go%>%arrange(qvalue, desc=F)%>%head(10)%>%pull(gene_list)%>%unlist()%>%unique() #302
+#plot their age coefficient
+
+
+##########################################################
 #non-linear gene groups (EC-L2-3-IT program)
 cluster_series = read.csv('/scratch/wyang114/bin/non-linear_trajectory/data/AD/EC-L2-3-IT_gene_clusters_up.csv',row.names = 1)
 cluster_series$gene = str_split_fixed(row.names(cluster_series),'_',2)[,2] 
@@ -318,6 +371,74 @@ msig_res <- enricher(gene          = gene.df$ENTREZID,
                      TERM2GENE     = msigdbr_t2g,
                      pvalueCutoff  = 0.05)
 barplot(msig_res, showCategory = 10, title = "EC-L2-3-IT_program(cluster2)_c2",font.size = 10)
+# ###Subtype
+# rg = 'HIP'
+# ad.sc.all = ad.sc%>%filter((dataset=='Mathys_2024'&region != 'allregions')|(dataset=='Grubman_2019'))
+# ad.sc.all$`celltype-region-dataset`= paste(ad.sc.all$ct_label,ad.sc.all$region,ad.sc.all$dataset,sep='-')
+# ct = 'glutamatergic neurons'
+# df_subset = df_query%>%filter(celltype==ct)%>%mutate(direction=ifelse(age_mashr_pm<0,'down','up'))
+# ad.sc.all$ct_label%>%unique
+# ad.subset = ad.sc.all%>%filter(ct_label %in% c("Exc","EX-neurons"))
+# universe_subset = df_universe%>%filter(celltype==ct)
+# 
+# 
+# df_subset$region_subtype = paste0(df_subset$region,'_',df_subset$louvain)
+# universe_subset$region_subtype = paste0(universe_subset$region,'_',universe_subset$louvain)
+# 
+# res=NULL
+# for(dir in c('up','down')){
+#   for(rg_lv in unique(df_subset$region_subtype)){
+#     
+#     temp = df_subset%>%filter(region_subtype==rg_lv)%>%filter(direction==dir)
+#     universe_id = universe_subset%>%filter(region_subtype==rg_lv)%>%pull(unique_values)%>%do.call('c',.)%>%unique()
+#     universe = var_info[universe_id,'external_gene_name']%>%unique()
+#     for(id2 in unique(ad.subset$`celltype-region-dataset`)){
+#       temp2 = ad.subset%>%filter(`celltype-region-dataset`==id2)%>%filter(direction==dir)
+#       geneset = temp2$macaque.gene.name%>%unique()
+#       deg = temp$external_gene_name
+#       a = intersect(deg, geneset)%>%length()
+#       b = setdiff(deg, geneset)%>%length()
+#       c = intersect(geneset,universe)%>%length() - a
+#       d = setdiff(universe,union(geneset,deg))%>%length()
+#       summary = fisher.test(matrix(c(a, b, c, d), nrow = 2), alternative = "greater")
+#       
+#       out = data.frame('louvain in macaque'=rg_lv,
+#                        'region in AD'=id2, 
+#                        'direction'=dir,
+#                        'a'=a, 'b'=b,'c'=c,'d'=d,
+#                        'pvalue'=summary$p.value,
+#                        'OR'=summary$estimate
+#       )
+#       res = rbind(res,out)
+#     }
+#   }
+# }
+# write.csv(res,sprintf('/home/wyang114/output/transcriptional/ad_overlap/%s_overlap_louvain.csv',ct))
+# res$padj = p.adjust(p = res$pvalue,method = 'bonferroni')
+# res = res%>%filter(OR!='Inf')
+# #order = c(5,0,17,27,29,16,24,30,28,18,26,6,20,1,12,23,3,22,2,19,21,4,25,8,9,10,11,13,14,15)%>%as.character()
+# pdf(sprintf('/home/wyang114/output/transcriptional/ad_overlap/%s_overlap_louvain_ALL.pdf',ct),width=6,height=12)
+# for(dir in c('up','down')){
+#   mat = res%>%filter(direction==dir)%>%
+#     pivot_wider(id_cols =louvain.in.macaque,names_from = region.in.AD,values_from = OR)%>%
+#     column_to_rownames('louvain.in.macaque')
+#   p_mat = res%>%filter(direction==dir)%>%
+#     pivot_wider(id_cols =louvain.in.macaque,names_from = region.in.AD,values_from =padj)%>%
+#     column_to_rownames('louvain.in.macaque')
+#   p_mat = p_mat[row.names(mat),colnames(mat)]
+#   significance_matrix <- ifelse(p_mat < 0.001, "***",
+#                                 ifelse(p_mat < 0.01, "**",
+#                                        ifelse(p_mat < 0.05, "*", "")))
+#   breaks <- seq(0, 6, length.out = 101)
+#   
+#   pheatmap(mat[sort(row.names(mat)),],display_numbers = significance_matrix[sort(row.names(mat)),],
+#            breaks = breaks,main = paste(ct,dir,sep='_'),
+#            cellwidth = 28,cellheight = 7,
+#            treeheight_row = 5,treeheight_col = 5,
+#            cluster_rows = F,cluster_cols = F,fontsize = 5)
+# }
+# dev.off()
+
 
 
 #######correlation (for those that are shared between AD dataset and our dataset, which is more correlated)
