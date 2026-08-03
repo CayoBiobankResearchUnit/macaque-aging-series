@@ -53,7 +53,7 @@ non_neurons = ['Astrocyte','Bergmann glia','Committed oligodendrocyte precursor'
               'Oligodendrocyte precursor','Vascular',
               'Miscellaneous'
               ]
-df_subset = df[(df['roi'].isin(ref_region)) | (df['supercluster_term'].isin(non_neurons))]
+df_subset = df[(df['roi'].isin([ref_region])) | (df['supercluster_term'].isin(non_neurons))]
 #df_subset = df #use full dataset
 select_cells = df_subset.index
 reference_subset = reference[select_cells,:].copy()

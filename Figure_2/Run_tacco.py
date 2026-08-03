@@ -48,12 +48,12 @@ reference = sc.read_h5ad(ref_dir)
 select_genes = reference.var.index[np.where(~reference.var['chromosome'].isin(['X','Y']))]
 
 #filter cells
-df = reference.obs[reference.obs['region'].isin(ref_region)]
+df = reference.obs[reference.obs['region'].isin([ref_region])]
 temp = df['cell_class'].value_counts(normalize=True)
 select_cell_class = temp[temp>0].index
 select_cells = reference.obs[reference.obs['cell_class'].isin(select_cell_class)].index
 reference_subset = reference[select_cells,select_genes].copy()
-reference_subset = reference_subset[reference_subset.obs['region'].isin(ref_region)]
+reference_subset = reference_subset[reference_subset.obs['region'].isin([ref_region])]
 print(reference_subset.shape)
 
 

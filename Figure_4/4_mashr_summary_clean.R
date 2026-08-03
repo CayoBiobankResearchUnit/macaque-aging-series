@@ -30,8 +30,8 @@
 #' Rscript 4_mashr_summary_clean.R
 NULL
 
-source('/home/wyang114/utils/plotting_theme.R')
-source('/home/wyang114/utils/annotation.R')
+source("utils/plotting_theme.R")
+source("utils/annotation.R")
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
@@ -1059,4 +1059,3 @@ pheatmap(mat,
          border_color = NA,
          treeheight_row = 10,
          treeheight_col = 10)
-

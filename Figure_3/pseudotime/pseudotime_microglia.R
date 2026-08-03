@@ -11,7 +11,7 @@ library(dplyr)
 library(monocle3)
 library(ggridges)
 theme_set(theme_minimal())
-source('/home/wyang114/utils/plotting_theme.R')
+source("utils/plotting_theme.R")
 
 data_dir = "/scratch/nsnyderm/u01/intermediate_files/cell-class_h5ad_update//"
 files = list.files(data_dir)
@@ -186,5 +186,4 @@ pData(cds)%>%data.frame()%>%
 # colnames(cds@int_colData@listData$reducedDims$UMAP) <- NULL
 # plot_cells(cds, color_cells_by = "partition")
 # plot_cells(cds, color_cells_by = "louvain")
-
 

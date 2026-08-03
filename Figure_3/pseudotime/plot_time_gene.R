@@ -77,7 +77,7 @@ rna %>% saveRDS('/scratch/wyang114/outputs/pseudotime/microglia_5kvargenes_p1_v2
   data.frame
 rna2 %>% saveRDS(paste0('/scratch/wyang114/outputs/pseudotime/microglia_5kvargenes_mean_p1_v2.Rds'))
 
-check stdev of mean expression across bins
+# Check the standard deviation of mean expression across bins
 rna_wide <- rna2 %>%
   pivot_wider(id_cols=c('new_bin', 'mean_ptime'),
               names_from=name, values_from=mean_value)
@@ -330,4 +330,3 @@ rna_df%>%select(pseudotime_p1,region)%>%
   group_by(bin)%>%
   mutate(freq=count/sum(count))%>%
   ggplot(.,aes(x=bin,y=freq,fill=region))+geom_bar(stat = 'identity')+theme_classic()
-

@@ -53,6 +53,8 @@ The main documented workflow is:
 
 Additional scripts examine region-specific and cell-type-specific genes, summarize enriched ontology terms, identify gene modules, compare subtype patterns, and calculate pathway gene scores.
 
+For a next flow pipeline of age-associated differential expression: https://github.com/vinettey/macaque-aging-de
+
 ### Figure 5: comparison with Alzheimer's disease
 
 - `Figure_5/AD_overlap_clean.R`: tests overlap between macaque age-associated differentially expressed genes and AD-associated genes from three independent age-matched case-control single-cell studies.

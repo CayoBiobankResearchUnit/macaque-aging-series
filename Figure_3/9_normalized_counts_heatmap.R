@@ -1,4 +1,4 @@
-source('/home/wyang114/utils/plotting_theme.R')
+source("utils/plotting_theme.R")
 library(monocle3)
 library(hooke)
 library(purrr)

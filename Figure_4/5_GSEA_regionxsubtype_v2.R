@@ -37,8 +37,8 @@ min_lv = numeric_args[2]
 max_lv <- numeric_args[3]
 thre <- numeric_args[4]
 
-source('/home/wyang114/utils/plotting_theme.R')
-source('/home/wyang114/utils/functions.R')
+source("utils/plotting_theme.R")
+source("utils/functions.R")
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
@@ -188,4 +188,3 @@ for(ct in ct_list[ct_num]){
   }
   
 }
-

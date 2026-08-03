@@ -10,7 +10,7 @@
 #' source("7_clustering_hooke_spline.R", echo = TRUE)
 NULL
 
-source('/home/wyang114/utils/plotting_theme.R')
+source("utils/plotting_theme.R")
 library(tidyverse)
 library(dplyr)
 library(gridExtra)
@@ -187,4 +187,3 @@ clean_df_meta%>%group_by(cluster,cell_subtype)%>%summarise(n = n()) %>%
   pivot_wider(id_cols='cluster',names_from='cell_subtype',values_from='n')%>%
   column_to_rownames('cluster')%>%mutate_all(~ if_else(is.na(.), 0, .))%>%t()%>%
   pheatmap(cluster_cols = FALSE)
-

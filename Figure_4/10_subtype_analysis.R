@@ -1,5 +1,5 @@
-source('/home/wyang114/utils/plotting_theme.R')
-source('/home/wyang114/utils/annotation.R')
+source("utils/plotting_theme.R")
+source("utils/annotation.R")
 library(dplyr)
 library(tidyverse)
 library(reshape2)

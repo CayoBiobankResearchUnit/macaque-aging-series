@@ -4,7 +4,7 @@ library(tidyverse)
 library(org.Mmu.eg.db)
 library(AnnotationDbi)
 library(ggplot2)
-source('/home/wyang114/utils/annotation.R')
+source("utils/annotation.R")
 
 all_df = read.csv('/scratch/wyang114/outputs/transcriptional/GO_terms/gsea_C5_summary.csv')
 load('/scratch/wyang114/outputs/transcriptional/GO_terms/gsea_go_cluster_new.RData')
