@@ -14,7 +14,9 @@ We present a single-cell transcriptomic atlas spanning 11 brain regions and the 
 ├── Figure_2/   # Cell annotation and subcluster/regulon analyses
 ├── Figure_3/   # Cell-abundance testing and pseudotime analyses
 ├── Figure_4/   # Age-associated differential expression and pathway analyses
-└── Figure_5/   # Overlap with Alzheimer's disease-associated gene-expression changes
+├── Figure_5/   # Overlap with Alzheimer's disease-associated gene-expression changes
+├── Figure_6/   # Sex-associated differential expression, age and sex overlap, and pathway analyses
+└── Figure_7/   # Age-by-sex interaction analyses  
 ```
 
 ### Figure 1: atlas preprocessing and overview
@@ -59,6 +61,37 @@ For a next flow pipeline of age-associated differential expression: https://gith
 
 - `Figure_5/AD_overlap_clean.R`: tests overlap between macaque age-associated differentially expressed genes and AD-associated genes from three independent age-matched case-control single-cell studies.
 - `Figure_5/plot_AD_overlap.ipynb`: generates downstream visualizations of shared age- and AD-associated expression patterns.
+
+## Figure 6: Sex-associated differential expression, overlap of age and sex on expression
+
+- `Figure_6/mashr_for_sex_degs/`
+
+The documented workflow is:
+
+1. `1_prep_files.R` converts NEBULA log-fold changes and standard error output from the sex covariate in `Figure_4/1_nebula_by_subtype-region.R` into matrices for `mashr`. Genes on autosomes and X/Y chromosomes are analyzed separately to avoid artificial inflation. 
+2. `2_run_mashr_sex.R` applies multivariate adaptive shrinkage by cell class and produces posterior means, posterior standard deviations, and local false-sign rates (LFSR). 
+3. `3_create_results_dataframes.R` combines NEBULA and `mashr` results, filters significant gene-by-condition results, and performs downstream summaries.
+
+- `Fig_6_plots.R`: performs statistical analyses and generates plots shown in Figure 6.
+- `Fig_6_ORA_analysis.R`: performs statistical over-representation analysis of age + sex DEGs among gene ontology datasets from `msigdbr` and SynGO. 
+- `Fig_6_AD_DEG.R`: tests overlap between macaque a+sDEGs and AD-associated genes from Mathys et al., 2024.
+
+These scripts are primarily interactive analysis documents. Open them in RStudio and run them sequentially after updating their input and output paths.
+
+## Figure 7: age-by-sex interactions on expression 
+
+- `Figure_7/mashr_for_age_sex_interaction/`
+
+The documented workflow is: 
+
+1. `1_post_hoc_filtering.R` filters NEBULA interaction model output for genes that showed either a significant age or sex interaction in the additive model. 
+2. `2_prepare_interaction_input_files.R` converts NEBULA log-fold changes and standard error output from the age, sex, interaction, and intercept terms into matrices for `mashr`. Genes on autosomes and X/Y chromosomes are analyzed separately to avoid artificial inflation.
+3. `3_run_mashr_interaction.R` applies multivariate adaptive shrinkage by cell class and produces posterior means, posterior standard deviations, and local false-sign rates (LFSR) for each term. 
+4. `4_create_results_dataframes.R` combines NEBULA and `mashr` results, filters significant gene-by-condition results, and performs downstream summaries.
+
+- `Fig_7_plots.R`: performs statistical analyses and generates plots shown in Figure 7.
+
+These scripts are primarily interactive analysis documents. Open them in RStudio and run them sequentially after updating their input and output paths.
 
 ## Software requirements
 
